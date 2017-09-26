@@ -1,0 +1,38 @@
+{
+  "name": "browserperformance",
+  "version": "1.0.0",
+  "description": "browser performance test framework",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc --rootDir src --outDir lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jijizz/BrowserPerformace.git"
+  },
+  "keywords": [
+    "performance"
+  ],
+  "author": "zhiliu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jijizz/BrowserPerformace/issues"
+  },
+  "devDependencies": {
+    "source-map-loader": "0.1.5",
+    "typescript": "2.4.2",
+    "tslint": "5.2.0",
+    "@types/node": "7.0.5",
+    "@types/node-uuid": "0.0.28",
+    "@types/mssql": "^4.0.4",
+    "@types/rimraf": "^2.0.2",
+    "@types/yargs": "8.0.2"
+  },
+  "dependencies": {
+    "mssql": "^4.0.4",
+    "node-uuid": "1.4.7",
+    "rimraf": "^2.4.1",
+    "yargs": "^9.0.1"
+  },
+  "homepage": "https://github.com/jijizz/BrowserPerformace#readme"
+}

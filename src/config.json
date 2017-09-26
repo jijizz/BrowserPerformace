@@ -1,0 +1,146 @@
+{
+    "database": {
+        "connection": {
+            "server": "zhidev",
+            "user": "perftest",
+            "password": "Versi0n2!1"
+        },
+        "name": "Performance_Test",
+        "tables": [
+            {
+                "name": "AllRuns",
+                "schema": [
+                    {
+                        "name": "runId",
+                        "type": "int",
+                        "nullable": false,
+                        "identity": true
+                    },
+                    {
+                        "name": "startTime",
+                        "type": "datetime",
+                        "nullable": true
+                    },
+                    {
+                        "name": "endTime",
+                        "type": "datetime",
+                        "nullable": true
+                    },
+                    {
+                        "name": "duration",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "testId",
+                        "type": "uniqueidentifier",
+                        "nullable": false
+                    },
+                    {
+                        "name": "build",
+                        "type": "nvarchar(4000)",
+                        "nullable": true
+                    },
+                    {
+                        "name": "enviroment",
+                        "type": "nvarchar(4000)",
+                        "nullable": false
+                    },
+                    {
+                        "name": "browser",
+                        "type": "nvarchar(4000)",
+                        "nullable": false
+                    }
+                ]
+            },
+            {
+                "name": "AllResults_P75",
+                "schema": [
+                    {
+                        "name": "runId",
+                        "type": "int",
+                        "nullable": false,
+                        "foreign": "AllRuns"
+                    },
+                    {
+                        "name": "testId",
+                        "type": "uniqueidentifier",
+                        "nullable": false
+                    },
+                    {
+                        "name": "tabResultLogName",
+                        "type": "nvarchar(500)",
+                        "nullable": true
+                    },
+                    {
+                        "name": "rawLog",
+                        "type": "nvarchar(MAX)",
+                        "nullable": true
+                    },
+                    {
+                        "name": "render",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "eupl",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "appStart",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "setTimeoutCost",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "glamor",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "serverDuration",
+                        "type": "int",
+                        "nullable": true
+                    },
+                    {
+                        "name": "iterationCount",
+                        "type": "int",
+                        "nullable": true
+                    }
+                ]
+            },
+            {
+                "name": "AllTests",
+                "schema": [
+                    {
+                        "name": "testId",
+                        "type": "uniqueidentifier",
+                        "nullable": false,
+                        "identity": true
+                    },
+                    {
+                        "name": "testName",
+                        "type": "nvarchar(4000)",
+                        "nullable": false
+                    },
+                    {
+                        "name": "testConfigName",
+                        "type": "nvarchar(4000)",
+                        "nullable": false
+                    }
+                ]
+            }
+        ]
+    },
+    "enviroment": {
+        "repoRoot": "E:\\GIT\\odsp-next"
+    },
+    "testContext": {
+        "testLogRoot": "node_modules\\@ms\\onedrive-buildtools-binaries\\tab\\bin\\service\\logs"
+    }
+}
