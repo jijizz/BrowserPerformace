@@ -33,6 +33,8 @@ export interface ITestContext {
     testConfigName: string;
     testLogRoot: string;
     browser: string;
+    testRunOptions: string;
+    timeoutInMinutes: number;
 }
 
 export interface IConfig {

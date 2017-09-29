@@ -1,4 +1,4 @@
-export class ResultReporter {
+export class TestReporter {
     constructor() {
 
     }

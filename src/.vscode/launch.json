@@ -6,7 +6,7 @@
             "request": "launch",
             "name": "Launch Program",
             "sourceMaps": true,
-            "program": "E:\\GIT\\BrowserPerformace\\lib\\index.js",
+            "program": "C:\\GIT\\BrowserPerformace\\lib\\index.js",
             //"program": "E:\\GIT\\BrowserPerformace\\src\\adhoc.js",
             "args": [
                 "--tests-to-run",

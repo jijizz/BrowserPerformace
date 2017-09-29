@@ -12,10 +12,12 @@ const configFilePath: string = path.resolve( './config.json' );
 function initConfig() {
     config = fsutils.readJsonFile(configFilePath) as IConfig;
     config.testContext = {
-        testName: clArgs['tests-to-run'],
-        testConfigName: clArgs['test-config'],
+        testName: clArgs['teststorun'],
+        testConfigName: clArgs['testconfig'],
         browser: clArgs['browser'],
-        testLogRoot: config.testContext.testLogRoot
+        testLogRoot: config.testContext.testLogRoot,
+        testRunOptions: clArgs['testrunoptions'],
+        timeoutInMinutes: clArgs['timeoutinminutes']
     };
     const hostName = os.hostname();
     dns.lookup(hostName, function(err, ip) {

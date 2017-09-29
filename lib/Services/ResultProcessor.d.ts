@@ -1,7 +1,7 @@
 export default class ResultProcessor {
     private _testResultDataSource;
     constructor();
-    ProcessResults(): void;
+    ProcessResults(): Promise<void>;
     private _archieve(unprocessedFiles);
     private _parseLogFile(file);
     private _getLatestProcessedLogFile();

@@ -13,10 +13,11 @@ interface resultLogFileMetaData {
 }
 
 const TAB_LOG_FILE_REGEX = /^TAB_([^_]*_?)+\.\w*$/;
-const PERF_DATA_REGEX = /SPListPerf\s?result:(.*)<\/td>/;
-const BUILD_REGEX = /SPListPerf\s?build:(.*)<\/td>/;
+const PERF_DATA_REGEX = /SPListPerf\s?result:(.*?)<\/td>/;
+const BUILD_REGEX = /SPListPerf\s?build:(.*?)<\/td>/;
 const TIME_TAKEN_REGEX = /Time\s?taken:\s?(\d+)\s?ms<\/div>/;
 const logFolderPath = path.join(config.enviroment.repoRoot, config.testContext.testLogRoot);
+const excludedFiles = ['combine.cmd', 'combinefiles.cmd'];
 
 export default class ResultProcessor {
     private _testResultDataSource: TestResultDataSource;
@@ -25,25 +26,32 @@ export default class ResultProcessor {
         this._testResultDataSource = new TestResultDataSource();
     }
 
-    public ProcessResults(): void {
+    public ProcessResults(): Promise<void> {
         let unprocessedFiles: resultLogFileMetaData[];
-        this._getUnprocessedTestLogs().then((_unprocessedFiles: resultLogFileMetaData[]) => {
-            unprocessedFiles = _unprocessedFiles;
-            const saveResultPromises: Promise<boolean>[] = [];
-            for (let unprocessedFile of unprocessedFiles) {
-                const saveTestResultQueryData = this._parseLogFile(unprocessedFile);
-                if (saveTestResultQueryData) {
-                    saveResultPromises.push(this._testResultDataSource.saveTestResult(saveTestResultQueryData));
-                }
-            }
-            return Promise.all(saveResultPromises);
-        }).then((saveResultQueryReturn: boolean[]) => {
-            console.log(`save test results: ${saveResultQueryReturn.join()}`);
+        return this._getUnprocessedTestLogs().then((_unprocessedFiles: resultLogFileMetaData[]) => {
+            unprocessedFiles = _unprocessedFiles.sort((a: resultLogFileMetaData, b: resultLogFileMetaData) => a.stats.ctime.getTime() - b.stats.ctime.getTime());
+
+            return unprocessedFiles.reduce((currentPromise: Promise<boolean>, currentFile: resultLogFileMetaData, currentIndex: number, array: resultLogFileMetaData[]) => {
+                const saveTestResultQueryData = this._parseLogFile(currentFile);
+                return currentPromise.then((result: boolean) => {
+                    if (!result) {
+                        console.log(`Failed to save results for file: ${array[currentIndex - 1].filePath}`);
+                    }
+                    return this._testResultDataSource.saveTestResult(saveTestResultQueryData);
+                }).catch((err: Error) => {
+                    console.log(`Failed to save results for file: ${array[currentIndex - 1].filePath}, error: ${err.message}`);
+                    return this._testResultDataSource.saveTestResult(saveTestResultQueryData);
+                });
+            }, Promise.resolve(true));
+        }).then((saveResultQueryReturn: boolean) => {
+            console.log(`saved all test results`);
             return this._archieve(unprocessedFiles);
         }).then(() => {
             console.log(`Successfully archieved log files.`);
-        }).catch((error) => {
-            console.log(`ProcessResults failure: `, error);
+            return undefined;
+        }).catch((err: Error) => {
+            console.log(`ProcessResults failure: ${err.message}`);
+            return undefined;
         })
     }
 
@@ -70,8 +78,8 @@ export default class ResultProcessor {
             const duration = TIME_TAKEN_REGEX.test(file.content) ? Number(file.content.match(TIME_TAKEN_REGEX)[1]) : NaN;
             return {
                 testRunEnviroment: config.enviroment.testRunEnviroment,
-                runStartTime: new Date(file.stats.ctime.getTime() - duration),
-                runEndTime: file.stats.ctime,
+                runStartTime: new Date(file.stats.mtime.getTime() - duration),
+                runEndTime: file.stats.mtime,
                 runDuration: duration,
                 build: build,
                 browser: config.testContext.browser,
@@ -97,7 +105,7 @@ export default class ResultProcessor {
             testConfigName: config.testContext.testConfigName,
             testName: config.testContext.testName,
             browser: config.testContext.browser,
-            numberOfRuns: 10
+            numberOfRuns: 100
         }).then((results: IQueryTestResultsSprocResultset) => {
             let lastLogFileName: string;
             const sorted = results.sort((a: IQueryTestResultsSprocResult, b: IQueryTestResultsSprocResult) => b.runId - a.runId);
@@ -109,7 +117,7 @@ export default class ResultProcessor {
                     console.log(`some result data is missing, this is not expected, eupl: ${result.eupl}, render: ${result.render}, TabResultLogFileName: ${result.tabResultLogName}`)
                 }
             }
-            const logFilePath = path.join(logFolderPath, lastLogFileName);
+            const logFilePath = lastLogFileName && path.join(logFolderPath, lastLogFileName);
             return {
                 fileName: lastLogFileName,
                 filePath: lastLogFileName && logFilePath,
@@ -121,13 +129,14 @@ export default class ResultProcessor {
 
     private _getUnprocessedTestLogs(): Promise<resultLogFileMetaData[]> {
         return this._getLatestProcessedLogFile().then((lastLog: resultLogFileMetaData) => {
-            const lastLogTime = lastLog.stats && lastLog.stats.ctime;
+            const lastLogTime = lastLog.stats && lastLog.stats.mtime;
             const files = fs.readdirSync(logFolderPath);
             return files.filter((fileName: string) => {
                 const filePath = path.join(logFolderPath, fileName);
                 const stats = fs.statSync(filePath);
                 return !stats.isDirectory() &&
-                    (!lastLogTime || stats.ctime > lastLogTime) &&
+                    excludedFiles.indexOf(fileName) === -1 &&
+                    (!lastLogTime || stats.mtime > lastLogTime) &&
                     (!lastLog.fileName || fileName != lastLog.fileName);
             }).map((fileName: string) => {
                 const filePath = path.join(logFolderPath, fileName);

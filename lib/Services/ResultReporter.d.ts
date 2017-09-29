@@ -1,3 +1,3 @@
-export declare class ResultReporter {
+export declare class TestReporter {
     constructor();
 }
