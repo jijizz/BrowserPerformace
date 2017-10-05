@@ -10,7 +10,8 @@
         "noUnusedLocals": true,
         "moduleResolution": "node",
         "declaration": true,
-        "sourceMap": true
+        "noImplicitAny": false,
+        "sourceMap": false
     },
     "typeRoots": [
         "./node_modules/@types"

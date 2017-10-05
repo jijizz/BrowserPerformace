@@ -1,20 +1,82 @@
 import * as childProcess from 'child_process';
 import * as path from 'path';
 import { config } from '../Context';
+import { logger } from '../Utilities/Log';
 
 export default class ResultReporter {
     constructor() {
     }
-    public runPerfTest(): Promise<null> {
-        return this._doGulpRunTab();
+
+    public runPerfTest(): Promise<void> {
+        return this._beforeRunTab().then(() => {
+            return this._doGulpRunTab()
+        });
     }
 
-    private _doGulpRunTab(): Promise<null> {
+    private _beforeRunTab(): Promise<void> {
+        logger.info('before gulp run tab.');
+        return this._killRunningTabService();
+    }
+
+    private _killRunningTabService(): Promise<void> {
+        return this._getRunningTabServiceProcesses().then((pids: number[]) => {
+            logger.info(`Kill orphan tab service, pids: ${pids.join(',')}`);
+            pids.forEach((pid: number) => {
+                process.kill(pid);
+            });
+            return this._checkTabServiceKilled();
+        })
+    }
+
+    private _getRunningTabServiceProcesses(): Promise<number[]> {
+        return new Promise<number[]>((resolve, reject) => {
+            childProcess.exec('TASKLIST /FI "IMAGENAME eq TabService.exe" /NH', (err, stdout, stderr) => {
+                if (err) {
+                    reject(err);
+                }
+                const lines = stdout.toString().split('\n');
+                const pids: number[] = [];
+                lines.forEach((line: string) => {
+                    const parts = line.replace(/\s+/g, ',').split(',');
+                    if (parts && parts.length > 1) {
+                        const name = parts[0];
+                        const pid = parts[1];
+                        if (name && !isNaN(Number(pid))) {
+                            pids.push(Number(pid));
+                        }
+                    }
+                });
+                resolve(pids);
+            });
+        });
+    }
+
+    private _checkTabServiceKilled(): Promise<void> {
+        logger.info('checking orphan tab services are killed');
+        return new Promise<void>((resolve, reject) => {
+            this._getRunningTabServiceProcesses().then((pids: number[]) => {
+                if (pids.length > 0) {
+                    setTimeout(() => {
+                        this._checkTabServiceKilled();
+                    }, 1000);
+                } else {
+                    logger.info('confirmed orphan tab services are killed');
+                    resolve();
+                }
+            }).catch((err: Error) => {
+                setTimeout(() => {
+                    this._checkTabServiceKilled();
+                }, 1000);
+            })
+        });
+    }
+
+    private _doGulpRunTab(): Promise<void> {
         let deferred;
-        const runTabPromise = new Promise<null>((resolve, reject) => {
+        const runTabPromise = new Promise<void>((resolve, reject) => {
             deferred = { resolve: resolve, reject: reject };
         });
-        
+
         const gulpPath = path.join(config.enviroment.repoRoot, 'node_modules', 'gulp', 'bin', 'gulp.js');
         const args = [];
         args.push(gulpPath);
@@ -35,7 +97,7 @@ export default class ResultReporter {
         // Tells the process that its in child process mode
         args.push('--childprocess');
 
-        console.log(`doGulpRunTab: Starting ${process.execPath} ${args.join(' ')}`);
+        logger.info(`doGulpRunTab: Starting ${process.execPath} ${args.join(' ')}`);
 
         var gulpProcess = childProcess.spawn(process.execPath, args, {
             cwd: config.enviroment.repoRoot,
@@ -44,7 +106,7 @@ export default class ResultReporter {
 
         gulpProcess.on('exit', (code: number) => {
             if (!code) {
-                console.log(`Successfully finished gulp runtab ${args.join(' ')}`);
+                logger.info(`Successfully finished gulp runtab ${args.join(' ')}`);
                 deferred.resolve(null);
             } else {
                 deferred.reject(new Error(`gulp runtab ${args.join(' ')}' exited with code ${code}`));

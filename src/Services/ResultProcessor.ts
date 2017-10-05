@@ -4,6 +4,7 @@ import * as path from 'path';
 import { config } from '../Context';
 import TestResultDataSource from '../DataSource/TestResultDataSource';
 import { IQueryTestResultsSprocResult, IQueryTestResultsSprocResultset, ISaveTestResultQueryData } from '../DataSource/ITestResultDataSource';
+import { logger } from '../Utilities/Log';
 
 interface resultLogFileMetaData {
     fileName: string;
@@ -14,10 +15,10 @@ interface resultLogFileMetaData {
 
 const TAB_LOG_FILE_REGEX = /^TAB_([^_]*_?)+\.\w*$/;
 const PERF_DATA_REGEX = /SPListPerf\s?result:(.*?)<\/td>/;
-const BUILD_REGEX = /SPListPerf\s?build:(.*?)<\/td>/;
+const BUILD_REGEX = /SPListPerf\s?build:\s?(.*?)<\/td>/;
 const TIME_TAKEN_REGEX = /Time\s?taken:\s?(\d+)\s?ms<\/div>/;
 const logFolderPath = path.join(config.enviroment.repoRoot, config.testContext.testLogRoot);
-const excludedFiles = ['combine.cmd', 'combinefiles.cmd'];
+const excludedFiles = ['combine.cmd', 'combinefiles.cmd', 'reportFileName.txt'];
 
 export default class ResultProcessor {
     private _testResultDataSource: TestResultDataSource;
@@ -27,30 +28,32 @@ export default class ResultProcessor {
     }
 
     public ProcessResults(): Promise<void> {
+        logger.info('start ProcessResults');
         let unprocessedFiles: resultLogFileMetaData[];
         return this._getUnprocessedTestLogs().then((_unprocessedFiles: resultLogFileMetaData[]) => {
+            logger.info('found _unprocessedFiles: ', unprocessedFiles);
             unprocessedFiles = _unprocessedFiles.sort((a: resultLogFileMetaData, b: resultLogFileMetaData) => a.stats.ctime.getTime() - b.stats.ctime.getTime());
 
             return unprocessedFiles.reduce((currentPromise: Promise<boolean>, currentFile: resultLogFileMetaData, currentIndex: number, array: resultLogFileMetaData[]) => {
                 const saveTestResultQueryData = this._parseLogFile(currentFile);
                 return currentPromise.then((result: boolean) => {
                     if (!result) {
-                        console.log(`Failed to save results for file: ${array[currentIndex - 1].filePath}`);
+                        logger.error(`Failed to save results for file: ${array[currentIndex - 1].filePath}`);
                     }
                     return this._testResultDataSource.saveTestResult(saveTestResultQueryData);
                 }).catch((err: Error) => {
-                    console.log(`Failed to save results for file: ${array[currentIndex - 1].filePath}, error: ${err.message}`);
+                    logger.error(`Failed to save results for file: ${array[currentIndex - 1].filePath}, error: ${err.message}`);
                     return this._testResultDataSource.saveTestResult(saveTestResultQueryData);
                 });
             }, Promise.resolve(true));
         }).then((saveResultQueryReturn: boolean) => {
-            console.log(`saved all test results`);
+            logger.info(`saved all test results`);
             return this._archieve(unprocessedFiles);
         }).then(() => {
-            console.log(`Successfully archieved log files.`);
+            logger.info(`Successfully archieved log files.`);
             return undefined;
         }).catch((err: Error) => {
-            console.log(`ProcessResults failure: ${err.message}`);
+            logger.error(`ProcessResults failure: ${err.message}`);
             return undefined;
         })
     }
@@ -114,7 +117,7 @@ export default class ResultProcessor {
                     lastLogFileName = result.tabResultLogName;
                     break;
                 } else {
-                    console.log(`some result data is missing, this is not expected, eupl: ${result.eupl}, render: ${result.render}, TabResultLogFileName: ${result.tabResultLogName}`)
+                    logger.error(`some result data is missing, this is not expected, eupl: ${result.eupl}, render: ${result.render}, TabResultLogFileName: ${result.tabResultLogName}`)
                 }
             }
             const logFilePath = lastLogFileName && path.join(logFolderPath, lastLogFileName);

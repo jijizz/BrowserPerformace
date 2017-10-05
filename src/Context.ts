@@ -15,9 +15,12 @@ function initConfig() {
         testName: clArgs['teststorun'],
         testConfigName: clArgs['testconfig'],
         browser: clArgs['browser'],
+        thresholdInMilliseconds: config.testContext.thresholdInMilliseconds,
         testLogRoot: config.testContext.testLogRoot,
         testRunOptions: clArgs['testrunoptions'],
-        timeoutInMinutes: clArgs['timeoutinminutes']
+        timeoutInMinutes: clArgs['timeoutinminutes'],
+        reportMailFrom: config.testContext.reportMailFrom,
+        reportMailcc: config.testContext.reportMailcc
     };
     const hostName = os.hostname();
     dns.lookup(hostName, function(err, ip) {

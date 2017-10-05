@@ -3,6 +3,9 @@ import { config } from '../Context';
 import { ITable, IColumn } from '../IConfig';
 import * as path from 'path';
 import * as fsutils from '../Utilities/FsUtils';
+import { logger } from '../Utilities/Log';
+
+const sprocsFilePath = path.join(__dirname, '../SQLQuery', 'sprocs.sql');
 
 export interface IConnectionPoolConfig {
     max: number;
@@ -39,7 +42,7 @@ const sqlConnectionPools: ISQLConnectionPools = {};
 export const MASTER_DB: string = 'master';
 
 function sqlErrorHandling(error) {
-    console.log('sql error: ', error);
+    logger.error('sql error: ', error);
 }
 
 function connect(dbName: string): Promise<ConnectionPool> {
@@ -103,10 +106,10 @@ export function query(command: string, dbName: string): Promise<Table[]> {
         const request = new Request(connection);
         return request.query(command);
     }).then((result) => {
-        console.log('sql query success: ', result);
+        logger.info('sql query success: ', result);
         return !!result.recordsets ? result.recordsets.map((recordset: IRecordSet<any>) => recordset.toTable()) : undefined;
     }).catch((error) => {
-        console.log('sql query error', error);
+        logger.error('sql query error', error);
         return undefined;
     });
 }
@@ -116,10 +119,10 @@ export function batch(command: string, dbName: string): Promise<Table[]> {
         const request = new Request(connection);
         return request.batch(command);
     }).then((result) => {
-        console.log('sql query success: ', result);
+        logger.info('sql query success: ', result);
         return !!result.recordsets ? result.recordsets.map((recordset: IRecordSet<any>) => recordset.toTable()) : undefined;
     }).catch((error) => {
-        console.log('sql query error', error);
+        logger.error('sql query error', error);
         return undefined;
     });
 }
@@ -139,10 +142,10 @@ export function execSproc<RET, OUT>(inputs: ISprocInput[], outputs: ISprocOutput
         }
         return request.execute(sproc);
     }).then((result: IProcedureResult<RET>) => {
-        console.log('sql query success: ', result);
+        logger.info('sql query success: ', result);
         return processProcedureResult<RET, OUT>(result);
     }).catch((error) => {
-        console.log('sql query error', error);
+        logger.error('sql query error', error);
         return undefined;
     });
 }
@@ -164,10 +167,10 @@ function processProcedureResult<RET, OUT>(result: IProcedureResult<RET>): ISproc
 export function createDB(): Promise<boolean> {
     const queryTxt = `create database ${config.database.name}`;
     return query(queryTxt, MASTER_DB).then((result: Table[]) => {
-        console.log('sql query succeeds: ', result);
+        logger.info('sql query succeeds: ', result);
         return true;
     }).catch((err) => {
-        console.log('sql query error: ', err);
+        logger.error('sql query error: ', err);
         return false;
     });
 }
@@ -175,23 +178,22 @@ export function createDB(): Promise<boolean> {
 export function createTable(tableConfig: ITable): Promise<boolean> {
     const queryTxt = buildCreateTableQuery(tableConfig);
     return query(queryTxt, config.database.name).then((result: Table[]) => {
-        console.log('sql query succeeds: ', result);
+        logger.info('sql query succeeds: ', result);
         return true;
     }).catch((err) => {
-        console.log('sql query error: ', err);
+        logger.error('sql query error: ', err);
         return false;
     });
 }
 
 export function createStoredProcedures(): Promise<boolean> {
-    const sprocFilePath: string = path.resolve("./sprocs.sql");
-    const sprocTxt: string = fsutils.readTextFile(sprocFilePath);
+    const sprocTxt: string = fsutils.readTextFile(sprocsFilePath);
     const sprocs: string[] = getSprocScripts(sprocTxt);
     const createSprocWorkers: Promise<Table[]>[] = sprocs.map((sproc: string) => batch(sproc, config.database.name));
     return Promise.all(createSprocWorkers).then((data: Table[][]) => {
         return true;
     }).catch((err) => {
-        console.log('fail to create stored procedures: ', err);
+        logger.error('fail to create stored procedures: ', err);
         return false;
     });
 }
@@ -199,10 +201,10 @@ export function createStoredProcedures(): Promise<boolean> {
 function getSprocScripts(all: string): string[] {
     const ret: string[] = [];
     do {
-        const startMatch = all.match(/CREATE\s?PROCEDURE\s?dbo\.proc_/);
+        const startMatch = all.match(/CREATE\s?(PROCEDURE|FUNCTION)\s?(dbo\.proc_|TVF)/);
         if (startMatch) {
             const substr = all.substring(startMatch[0].length);
-            const endMatch = substr.match(/CREATE\s?PROCEDURE\s?dbo\.proc_/);
+            const endMatch = substr.match(/CREATE\s?(PROCEDURE|FUNCTION)\s?(dbo\.proc_|TVF)/);
             if (endMatch) {
                 const sproc = startMatch[0] + substr.substring(0, endMatch.index);
                 ret.push(sproc);

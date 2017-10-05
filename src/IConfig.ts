@@ -25,6 +25,7 @@ export interface IDatabase {
 
 export interface IEnviroment {
     repoRoot: string;
+    logFolder: string;
     testRunEnviroment: string;
 }
 
@@ -33,12 +34,22 @@ export interface ITestContext {
     testConfigName: string;
     testLogRoot: string;
     browser: string;
+    thresholdInMilliseconds: number;
     testRunOptions: string;
     timeoutInMinutes: number;
+    reportMailFrom: string;
+    reportMailcc: string[];
+}
+
+export interface IGitContext {
+    project: string;
+    serverUrl: string;
+    repo: string;
 }
 
 export interface IConfig {
     database: IDatabase;
     enviroment: IEnviroment;
     testContext: ITestContext;
+    gitContext: IGitContext;
 }

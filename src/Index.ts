@@ -3,20 +3,40 @@ import { config } from './Context';
 import { runDeployment } from './Deployment/DeployTestService';
 import TestExecutor from './Services/TestExecutor';
 import ResultProcessor from './Services/ResultProcessor';
+import ResultReporter from './Services/ResultReporter';
+import { logger } from './Utilities/Log';
+import { sendPerfRegressionMail } from './Utilities/Mail';
 
-console.log("config: ", config);
+logger.info("config: ", config);
 runDeployment().then((ret: boolean) => {
-    console.log('start running tab test');
+    logger.info('start running tab test');
     const executor = new TestExecutor();
     return executor.runPerfTest();
 }).then(() => {
-    console.log('start result processing');
+    logger.info('start result processing');
     const resultProcessor = new ResultProcessor();
     return resultProcessor.ProcessResults();
 }).then(() => {
-    console.log('sucessfully fishined result processing.');
+    logger.info('sucessfully fishined result processing.');
+    const reporter = new ResultReporter();
+    return reporter.report();
+}).then(() => {
+    logger.info('sucessfully fishined result reporting.');
     process.exit(0);
 }).catch((err: Error) => {
-    console.log(`Perf test failed with error: ${err.message}`);
+    logger.error(`Perf test failed with error: ${err.message}`);
     process.exit(1);
 });
+// sendPerfRegressionMail({
+//     type: 0,
+//     data: [
+//         ['Builds', 'eupl','render','numberOfRuns'],
+//         ['odsp-next-master_20170930.001', '1900','1300','5'],
+//         ['odsp-next-master_20170930.002', '2000','1400','5'],
+//         ['Delta', '100', '100', undefined],
+//         ['Delta_Percent', '5', '5', undefined]
+//     ],
+//     targetBuild: 'odsp-next-master_20170930.002'
+// }).then(() => {
+//     logger.info('send perf regression mail successfully');
+// });
