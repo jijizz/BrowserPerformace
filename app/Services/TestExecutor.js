@@ -4,6 +4,7 @@ var childProcess = require("child_process");
 var path = require("path");
 var Context_1 = require("../Context");
 var Log_1 = require("../Utilities/Log");
+var TABSERVICE_TIMEOUT_CODE = 8888;
 var ResultReporter = (function () {
     function ResultReporter() {
     }
@@ -85,6 +86,7 @@ var ResultReporter = (function () {
         args.push("--teststorun=*" + Context_1.config.testContext.testName);
         args.push("--browser=" + Context_1.config.testContext.browser);
         args.push('--closeonexit');
+        args.push('--useexitcode');
         args.push('--allowinsecurecontent');
         if (Context_1.config.testContext.testRunOptions) {
             args.push("--testrunoptions=" + Context_1.config.testContext.testRunOptions);
@@ -105,6 +107,9 @@ var ResultReporter = (function () {
                 deferred.resolve(null);
             }
             else {
+                if (code === TABSERVICE_TIMEOUT_CODE) {
+                    Log_1.logger.error("Perf test did not finish in allowed time, tab service timed out, there will be no test results for this run");
+                }
                 deferred.reject(new Error("gulp runtab " + args.join(' ') + "' exited with code " + code));
             }
         });

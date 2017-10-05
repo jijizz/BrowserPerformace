@@ -1,4 +1,4 @@
-SET params=--teststorun=SPListPerf --testconfig=SPDFPERFConfig --browser=Chrome --timeoutinminutes=59
+SET params=--teststorun=SPListPerf --testconfig=SPDFPERFConfig --browser=Chrome
 cd %~dp0\..\app
 @IF EXIST "%~dp0\node.exe" (
   ECHO "%~dp0\node.exe" ".\index.js" %params% %*

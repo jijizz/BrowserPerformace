@@ -3,6 +3,8 @@ import * as path from 'path';
 import { config } from '../Context';
 import { logger } from '../Utilities/Log';
 
+const TABSERVICE_TIMEOUT_CODE = 8888;
+
 export default class ResultReporter {
     constructor() {
     }
@@ -87,6 +89,7 @@ export default class ResultReporter {
         args.push(`--teststorun=*${config.testContext.testName}`);
         args.push(`--browser=${config.testContext.browser}`);
         args.push('--closeonexit');
+        args.push('--useexitcode');
         args.push('--allowinsecurecontent');
         if (config.testContext.testRunOptions) {
             args.push(`--testrunoptions=${config.testContext.testRunOptions}`);
@@ -109,6 +112,9 @@ export default class ResultReporter {
                 logger.info(`Successfully finished gulp runtab ${args.join(' ')}`);
                 deferred.resolve(null);
             } else {
+                if (code === TABSERVICE_TIMEOUT_CODE) {
+                    logger.error(`Perf test did not finish in allowed time, tab service timed out, there will be no test results for this run`);
+                }
                 deferred.reject(new Error(`gulp runtab ${args.join(' ')}' exited with code ${code}`));
             }
         });
