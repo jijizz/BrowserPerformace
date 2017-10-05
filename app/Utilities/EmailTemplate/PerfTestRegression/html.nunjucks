@@ -1,0 +1,28 @@
+{% extends baseTemplate %}
+{% import macronjk as tableRender %}
+
+{% block content %}
+<div>There is SPList render time perf {% if (perfData.type === 0) %} regression {% else %} improvement {% endif %} detected:</div>
+<br />
+<div>
+<table class="perfTable">
+    {% for build in perfData.data %}
+      {{
+        tableRender.renderRows(build, loop.index == 1) 
+      }}
+    {% endfor %}
+</table>
+</div>
+<br/>
+ <p> Potential Changes causing this regression in {{perfData.targetBuild}}: </p>
+<div>
+  {% for email, gchanges in changes %}
+    <h4>{{ email }}:</h4>
+    {% for change in gchanges %}
+      <li><a href="{{change.commit.url}}">{{ change.commit.commitId.substring(0, 7) }}</a>&nbsp;&nbsp;{{ change.commit.comment.split('\n')[0] }}&nbsp;&nbsp;; &nbsp;&nbsp;pull request: <a href="{{change.pr.url}}">{{ change.pr.pullRequestId }}</a></li>
+    {% else %}
+      <li>no changes found.</li>
+    {% endfor %}
+  {% endfor %}
+</div>
+{% endblock %}

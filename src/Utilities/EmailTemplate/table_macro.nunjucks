@@ -1,0 +1,25 @@
+{% macro renderRows(metrics, header) %}
+<tr>
+  {% if header %}
+    {% for metric in metrics %}
+       <th>{{ metric }}</th>
+    {% endfor %}
+  {% else %}
+    {% for metric in metrics %}
+       {% if metric.cssClass %}
+        <td class="{{ metric.cssClass }}">
+       {% else %}
+        <td>
+       {% endif %}
+          {% if metric.warning === 'improvement' and metric.content %}
+            {{ metric.content }}&nbsp;&nbsp;<img class="perfDataIcon" src="http://findicons.com/icon/download/219241/good_mark/24/png">
+          {% elif metric.warning === 'regression' and metric.content %}
+            {{ metric.content }}&nbsp;&nbsp;<img class="perfDataIcon" src="http://findicons.com/icon/download/219210/error/24/png">
+          {% else %}
+            {{ metric.content if metric.content else metric}}
+          {% endif %}
+       </td>
+    {% endfor %}
+  {% endif %}
+</tr>
+{% endmacro %}
