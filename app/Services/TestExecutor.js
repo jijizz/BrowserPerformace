@@ -110,7 +110,9 @@ var ResultReporter = (function () {
                 if (code === TABSERVICE_TIMEOUT_CODE) {
                     Log_1.logger.error("Perf test did not finish in allowed time, tab service timed out, there will be no test results for this run");
                 }
-                deferred.reject(new Error("gulp runtab " + args.join(' ') + "' exited with code " + code));
+                Log_1.logger.error('Perf test run finished with error, error code: ', code);
+                deferred.resolve(null);
+                // deferred.reject(new Error(`gulp runtab ${args.join(' ')}' exited with code ${code}`));
             }
         });
         return runTabPromise;

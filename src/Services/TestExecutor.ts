@@ -115,6 +115,7 @@ export default class ResultReporter {
                 if (code === TABSERVICE_TIMEOUT_CODE) {
                     logger.error(`Perf test did not finish in allowed time, tab service timed out, there will be no test results for this run`);
                 }
+                logger.error('Perf test run finished with error, error code: ', code);
                 deferred.reject(new Error(`gulp runtab ${args.join(' ')}' exited with code ${code}`));
             }
         });

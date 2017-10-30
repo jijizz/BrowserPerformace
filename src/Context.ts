@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fsutils from './Utilities/FsUtils';
 import * as os from 'os';
 import * as dns from 'dns';
-import { IConfig } from './IConfig';
+import { IConfig, RunMode } from './IConfig';
 import { argv as clArgs } from 'yargs';
 
 export let config: IConfig = undefined;
@@ -22,6 +22,11 @@ function initConfig() {
         reportMailFrom: config.testContext.reportMailFrom,
         reportMailcc: config.testContext.reportMailcc
     };
+    if (config.runContext.mode.toString() === 'full') {
+        config.runContext.mode = RunMode.full;
+    } else if (config.runContext.mode.toString() === 'generateLoad') {
+        config.runContext.mode = RunMode.generateLoad;
+    }
     const hostName = os.hostname();
     dns.lookup(hostName, function(err, ip) {
         console.log('IP: ' + ip);

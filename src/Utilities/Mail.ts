@@ -40,6 +40,8 @@ export interface IChange {
   commit: GitInterfaces.GitCommit;
   pr: GitInterfaces.GitPullRequest;
   author: GitInterfaces.GitUserDate;
+  commitUrl?: string;
+  prUrl?: string;
 }
 
 export interface IGroupedChanges {

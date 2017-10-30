@@ -47,9 +47,19 @@ export interface IGitContext {
     repo: string;
 }
 
+export enum RunMode {
+    full = "full",
+    generateLoad = "generateLoad",
+}
+
+export interface IRunContext {
+    mode: RunMode;
+}
+
 export interface IConfig {
     database: IDatabase;
     enviroment: IEnviroment;
     testContext: ITestContext;
     gitContext: IGitContext;
+    runContext: IRunContext;
 }

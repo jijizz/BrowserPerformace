@@ -138,8 +138,8 @@
         ]
     },
     "enviroment": {
-        "repoRoot": "C:\\GIT\\odsp-next",
-        "logFolder": "C:\\STS_Perf_Test_Logs"
+        "repoRoot": "D:\\GIT\\odsp-next",
+        "logFolder": "D:\\STS_Perf_Test_Logs"
     },
     "testContext": {
         "testLogRoot": "node_modules\\@ms\\onedrive-buildtools-binaries\\tab\\bin\\service\\logs",

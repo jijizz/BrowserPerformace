@@ -99,6 +99,16 @@ export default class ResultReporter {
             });
     }
 
+    private _getCommitUrl(commit: GitInterfaces.GitCommit): string {
+        const ret = `${config.gitContext.serverUrl}/_git/${config.gitContext.repo}/commit/${commit.commitId}`;
+        return ret;
+    }
+
+    private _getPRUrl(pr: GitInterfaces.GitPullRequest): string {
+        const ret = `${config.gitContext.serverUrl}/_git/${config.gitContext.repo}/pullrequest/${pr.pullRequestId}`;
+        return ret;
+    }
+
     private _processChanges(
         currentCommitId: string,
         baselineCommitId: string,
@@ -108,10 +118,12 @@ export default class ResultReporter {
         return this._vsoHelper.getCommit(currentCommitId).then((commit: GitInterfaces.GitCommit) => {
             if (commit && commit.commitId != baselineCommitId) {
                 const pr = this._getPRByCommitId(commit.commitId, prs);
-                const change = {
+                const change: IChange = {
                     commit: commit,
                     pr: pr,
-                    author: commit.committer
+                    author: commit.committer,
+                    prUrl: this._getPRUrl(pr),
+                    commitUrl: this._getCommitUrl(commit)
                 };
                 if (commit.parents.length === 1) { // this commit has only 1 parent, it must be a merge commit in master
                     return this._processChanges(commit.parents[0], baselineCommitId, prs).then((changes: IChange[]) => {
