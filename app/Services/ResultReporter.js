@@ -89,6 +89,14 @@ var ResultReporter = (function () {
             return _this._processChanges(targetCommitId, baselineCommitId, prs);
         });
     };
+    ResultReporter.prototype._getCommitUrl = function (commit) {
+        var ret = Context_1.config.gitContext.serverUrl + "/_git/" + Context_1.config.gitContext.repo + "/commit/" + commit.commitId;
+        return ret;
+    };
+    ResultReporter.prototype._getPRUrl = function (pr) {
+        var ret = Context_1.config.gitContext.serverUrl + "/_git/" + Context_1.config.gitContext.repo + "/pullrequest/" + pr.pullRequestId;
+        return ret;
+    };
     ResultReporter.prototype._processChanges = function (currentCommitId, baselineCommitId, prs) {
         var _this = this;
         Log_1.logger.info("check " + currentCommitId);
@@ -98,7 +106,9 @@ var ResultReporter = (function () {
                 var change_1 = {
                     commit: commit,
                     pr: pr,
-                    author: commit.committer
+                    author: commit.committer,
+                    prUrl: _this._getPRUrl(pr),
+                    commitUrl: _this._getCommitUrl(commit)
                 };
                 if (commit.parents.length === 1) {
                     return _this._processChanges(commit.parents[0], baselineCommitId, prs).then(function (changes) {
