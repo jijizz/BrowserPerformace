@@ -35,8 +35,8 @@ Create windows scheduled job to run tests in schedule:
     - trigger can be hourly or every N hours depending on the time needs for test to execute
     - configure Actions to be these following settings (you should change drive letter to be your config):
         - change program/script to be `D:\GIT\BrowserPerformace\app\bin\perftest.cmd`
-        - change `add arguments (optional)` to be `--testrunoptions=500,3,1800,1000 --smtpUser=zhiliu@microsoft.com --smtpPass=<your smtp password> --buildaccounttoken=<access token used to access VSO services, get it from your repo admin> --timeoutinminutes=119`.
-            - testrunoptions will be passed into tab test and it is formatted as this: `<number of formal iterations>,<number of warmup iterations>,<waiting time before navigating to about:blank>,<waiting time before starting next iteration>.
+        - change `add arguments (optional)` to be `--testrunoptions=500,3,1800,1000 --smtpUser=zhiliu@microsoft.com --smtpPass=<your smtp password> --buildaccounttoken=<access token used to access VSO services, get it from your repo admin> --timeoutinminutes=119`
+            - testrunoptions will be passed into tab test and it is formatted as this: `<number of formal iterations>,<number of warmup iterations>,<waiting time before navigating to about:blank>,<waiting time before starting next iteration>`.
             - [test example, click me]((https://onedrive.visualstudio.com/DefaultCollection/OneDriveWeb/_git/odsp-next?path=%2Fsrc%2Ftest%2Ftab%2FSPListPerf.ts&version=GBmaster&_a=contents))
             - timeoutinminutes: when reaching, tab service will abort autometically, this will make sure tab test will not stuck forever. It will kill the currently running test when it is hang or running too slow.
         - change `start in (optional)` to be `D:\GIT\BrowserPerformace\app`
